@@ -209,7 +209,7 @@ def get_user_data(access_token):
     return json.loads(response)
 
 
-def check_whitelist(user_data, user, pamh):
+def check_whitelist(user_data, user, pamh, allow_conversation=True):
     """
     Check if the specified user is in the white list of allowed users
     :param user: name of the user to login to
@@ -226,22 +226,25 @@ def check_whitelist(user_data, user, pamh):
         with open(path) as data_file:
             whitelist = json.load(data_file)
     except IOError:
-        pamh.conversation(pamh.Message(pamh.PAM_PROMPT_ECHO_ON, 'ERROR: Unknown user ' + user))
+        if allow_conversation:
+            pamh.conversation(pamh.Message(pamh.PAM_PROMPT_ECHO_ON, 'ERROR: Unknown user ' + user))
         return pamh.PAM_USER_UNKNOWN
 
     if 'email' not in user_data and 'mail' in user_data.keys():
         user_data['email'] = user_data['mail']
 
     if 'email' not in user_data:
-        pamh.conversation(pamh.Message(pamh.PAM_PROMPT_ECHO_ON,
-                                       'ERROR: Non existing mail parameter in the data provided by your institution'))
+        if allow_conversation:
+            pamh.conversation(pamh.Message(pamh.PAM_PROMPT_ECHO_ON,
+                                           'ERROR: Non existing mail parameter in the data provided by your institution'))
         return pamh.PAM_AUTHINFO_UNAVAIL
 
     for email in whitelist['users']:
         if email == str(user_data['email']):
             return pamh.PAM_SUCCESS
 
-    pamh.conversation(pamh.Message(pamh.PAM_PROMPT_ECHO_ON, 'ERROR: Your user cannot login as' + user))
+    if allow_conversation:
+        pamh.conversation(pamh.Message(pamh.PAM_PROMPT_ECHO_ON, 'ERROR: Your user cannot login as' + user))
     return pamh.PAM_USER_UNKNOWN
 
 
@@ -264,6 +267,10 @@ def pam_sm_authenticate(pamh, flags, argv):
     pamh.conversation(pamh.Message(pamh.PAM_TEXT_INFO, 'User has been authenticated in eduGAIN network'))
 
     # check with whitelist if user is valid
+    if 'dec_id_token' in response.keys():
+        direct_auth = check_whitelist(response['dec_id_token'], user, pamh, allow_conversation=False)
+        if direct_auth == pamh.PAM_SUCCESS:
+            return pamh.PAM_SUCCESS
     return check_whitelist(get_user_data(response['access_token']), user, pamh)
 
 

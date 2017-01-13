@@ -183,7 +183,7 @@ def start_server(pamh, argv):
     # create main uri using random generated port
     global PORT
     PORT = server.server_address[1]
-    host_ip = socket.getfqdn()
+    host_ip = socket.gethostbyname(socket.getfqdn())
     global MY_URI
     MY_URI = 'http://{0}:{1}'.format(host_ip, str(PORT))
     try:
@@ -258,7 +258,7 @@ def check_whitelist(user_data, user, pamh):
         if email == str(user_data['email']):
             return pamh.PAM_SUCCESS
 
-    pamh.conversation(pamh.Message(pamh.PAM_PROMPT_ECHO_ON, 'ERROR: Your user cannot login as' + user))
+    pamh.conversation(pamh.Message(pamh.PAM_PROMPT_ECHO_ON, 'ERROR: Your user cannot login as ' + user))
     return pamh.PAM_USER_UNKNOWN
 
 

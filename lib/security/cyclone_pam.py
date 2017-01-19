@@ -10,6 +10,7 @@ import json
 import random
 from datetime import datetime
 import Queue
+import requests
 from jose import jwt
 
 BASE_URI = 'https://federation.cyclone-project.eu/auth/realms/master/protocol/openid-connect'

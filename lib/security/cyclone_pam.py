@@ -183,7 +183,14 @@ def start_server(pamh, argv):
     # create main uri using random generated port
     global PORT
     PORT = server.server_address[1]
-    host_ip = socket.gethostbyname(socket.getfqdn())
+    host_ip = None
+    #Get ip for openstack clouds
+    try:
+        host_ip = requests.get("http://169.254.169.254/latest/meta-data/public-ipv4").text
+    except Exception:
+        pass
+    if host_ip is None:
+        host_ip = socket.gethostbyname(socket.getfqdn())
     global MY_URI
     MY_URI = 'http://{0}:{1}'.format(host_ip, str(PORT))
     try:
